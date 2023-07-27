@@ -1,12 +1,22 @@
 import datetime as dt # to log the time of onsets in a more readable and useful way
 import matplotlib.pyplot as plt
 import numpy as np
-import argparse
 
 
 ### IMPORTANT!! Defined functions can't be the same name as intrinsic functions ###
-def readascii_ben(file,startline=0,endline = 10**100):
+def readascii_ben(file,startline=0,endline = 10**100,rawreturn=0):
     with open(file) as f:
+        if rawreturn == 1:
+            rtn = [[] for x in f.readline().split()]
+            print('Reading file...')
+            print('number of elements: ',len(rtn))
+            f.seek(0)
+            for line in f:
+                spln = line.split()
+                for x in range(len(spln)):
+                    rtn[x].append(int(spln[x]))
+            print('File Reading Complete')
+            return rtn
         year = [] ### following lists are used to log their respective information
         month = [] ### indicies are the same throughout all of the lists
         day = []
@@ -67,10 +77,11 @@ def readascii_ben(file,startline=0,endline = 10**100):
 
 
 Assignment = int(input("Assignment to run?(1,2,or 3) "))
+NXT = 0
+if Assignment == 999:NXT = 1
 
 
-
-if Assignment == 1:
+if Assignment == 1 or NXT == 1:
     ### ASSIGNMENT 1 ###
 
     data = readascii_ben("sme_2013.txt",startline=106, endline=10000) ### we only need the first onset, so we don't need a high endline
@@ -92,7 +103,8 @@ if Assignment == 1:
     plt.plot(xValues,yValues)
     plt.show()
     
-elif Assignment == 2:            
+    
+if Assignment == 2 or NXT == 1:            
     ### ASSIGNMENT 2 ###
             
     data = readascii_ben('sme_2013.txt',startline=106)
@@ -104,10 +116,11 @@ elif Assignment == 2:
             break
     del data['month'][ind:] ## Housekeeping and variable maintinance for debugging
     times = ([str(data['time'][x]) for x in data['onsets']])
+    print('ONSET TIMES:\n')
     for X in times:
         print(X,'\n')
     
-elif Assignment == 3:
+if Assignment == 3 or NXT == 1:
     ### ASSIGNMENT 3 ###
     
     data = readascii_ben('sme_2013.txt',startline=106)
@@ -129,7 +142,88 @@ elif Assignment == 3:
     plt.show()
     
     
-elif Assignment == 77:
+### EXTRA, total amount of time spent in substorms in 2013
+if Assignment == 4 or NXT == 1:
+    TotalMinutes = 0
+    TotalStorms = 0
+    data = readascii_ben('sme_2013.txt',startline=106)
+    for instance in range(len(data['AL'])):
+        if data['AL'][instance-1] > -499 and data['AL'][instance] <= -500:
+            minutes=1
+            TotalStorms += 1
+            index = instance
+            while data['AL'][index] <= -500:
+                minutes += 1
+                index += 1
+            else:
+                TotalMinutes += minutes
+    print('total amount of time spent in substorms in 2013 in minutes: ',TotalMinutes)
+    print('Total substorms in 2013: ',TotalStorms)
+    print('Average time in minutes per substorm in 2013: ',TotalMinutes/TotalStorms)
+    
+    
+    
+    
+    
+    
+    
+### EXTRA, total amount of time spent in storms in 2003
+if Assignment == 5 or NXT == 1:
+    TotalMinutes = 0
+    TotalStorms = 0
+    StormIndicies = []
+    years,days,hours,minlist,SYMH = readascii_ben('SYMH_2003.txt',rawreturn=1)
+    print('Looping...')
+    for instance in range(len(SYMH)):
+        if SYMH[instance-1] > -100 and SYMH[instance] <= -100:
+            minutes=1
+            TotalStorms += 1
+            index = instance
+            StormIndicies.append(instance)
+            while SYMH[index] <= -100:
+                minutes += 1
+                index += 1
+
+            else:
+                TotalMinutes += minutes
+    temp = 0
+    index = 0
+    while StormIndicies[index+1] != StormIndicies[-1]:
+        if StormIndicies[index+1] - StormIndicies[index] <= 750:
+            print(StormIndicies[index+1],'  ',StormIndicies[index],'  ', StormIndicies[index+1]-StormIndicies[index])
+            StormIndicies.remove(StormIndicies[index+1])
+            TotalStorms -= 1
+            temp += 1
+        else:
+            index+=1
+
+    
+    
+    # for x in range(len(StormIndicies)-1):
+    #     if StormIndicies[x] + 720 > StormIndicies[x+1]: TotalStorms -= 1;StormIndicies[x+1] = StormIndicies[x];StormIndicies[x] = 0
+    print(TotalStorms+temp)
+    for storm in StormIndicies:
+        print(days[storm],hours[storm],minlist[storm])
+        
+                
+    print('Total amount of time spent in a storm in 2003 in minutes: ',TotalMinutes)
+    print('Total storms in 2003: ',TotalStorms)
+    print('Average time in minutes per storm in 2003: ',TotalMinutes/TotalStorms)    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+if Assignment == 77:
     EL = int(input('How many? Anything over 100,000 is a bad idea... no commas'))
     data = readascii_ben("sme_2013.txt",startline=106, endline=EL+106)
     # time = [str(dt.time(hour = x.hour,minute=x.minute,second=x.second)) for x in data['time']]
@@ -149,8 +243,6 @@ elif Assignment == 77:
         plt.xlabel('Time of day in month '+ str(data['month'][onset])+' (dd:hh:mm)')
         plt.plot(xValues,yValues)
         plt.show()
-else:
-     raise ValueError ("Incorrect assignment number")
 
 
 
